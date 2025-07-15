@@ -121,10 +121,11 @@ export class IntegrationService {
 
   async handleWebhook(req: Request) {
     this.logger.log('Handling webhook request');
+
     try {
       const db = await getDb();
       const data = req.body as Record<string, unknown>;
-      this.logger.log(`Webhook data received: ${JSON.stringify(data)}`);
+
       this.logger.log(`Webhook data received: ${JSON.stringify(data)}`);
 
       if (!data || typeof data !== 'object' || Array.isArray(data)) {
@@ -133,6 +134,8 @@ export class IntegrationService {
       }
 
       const insertResults: Record<string, { insertedCount: number }> = {};
+      const now = new Date(); // ‼ capture once
+
       for (const collectionName of Object.keys(data)) {
         const documents = (data as Record<string, unknown[]>)[collectionName];
         if (!Array.isArray(documents)) {
@@ -142,8 +145,31 @@ export class IntegrationService {
           continue;
         }
 
+        // Add timestamps to each document
+        const docsWithTimestamps = documents.map((doc) => {
+          // Type guard to ensure doc is an object
+          if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
+            this.logger.warn(
+              `Skipping invalid document: ${JSON.stringify(doc)}`,
+            );
+            return doc;
+          }
+
+          const d: any = { ...doc };
+
+          // Always add created timestamp if it doesn't exist
+          if (!d.created) {
+            d.created = now;
+          }
+
+          // Always add/update the updated timestamp
+          d.updated = now;
+
+          return d;
+        });
+
         const collection = db.collection(collectionName);
-        const insertResult = await collection.insertMany(documents);
+        const insertResult = await collection.insertMany(docsWithTimestamps);
 
         insertResults[collectionName] = {
           insertedCount: insertResult.insertedCount,
@@ -153,9 +179,7 @@ export class IntegrationService {
         );
       }
 
-      return {
-        Result: insertResults,
-      };
+      return { Result: insertResults };
     } catch (error) {
       this.logger.error(`Error processing webhook: ${error}`);
       throw error;
