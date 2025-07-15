@@ -22,18 +22,39 @@ export default function ReadItem({ config }) {
   const [listState, setListState] = useState([]);
 
   if (fields) readColumns = [...dataForRead({ fields: fields, translate: translate })];
+  
+  // If config has readColumns with render functions, use those instead
+  if (config.readColumns) {
+    readColumns = config.readColumns;
+  }
+  
   useEffect(() => {
     const list = [];
+    console.log('ReadItem - readColumns:', readColumns);
+    console.log('ReadItem - currentResult:', currentResult);
+    
     readColumns.map((props) => {
       const propsKey = props.dataIndex;
       const propsTitle = props.title;
       const isDate = props.isDate || false;
       let value = valueByString(currentResult, propsKey);
-      value = isDate ? dayjs(value).format(dateFormat) : value;
+      
+      console.log(`ReadItem - Processing ${propsKey}:`, value, 'has render:', !!props.render);
+      
+      // Apply custom render function if it exists
+      if (props.render && typeof props.render === 'function') {
+        console.log(`ReadItem - Applying render function for ${propsKey}`);
+        value = props.render(value);
+        console.log(`ReadItem - After render for ${propsKey}:`, value);
+      } else {
+        value = isDate ? dayjs(value).format(dateFormat) : value;
+      }
+      
       list.push({ propsKey, label: propsTitle, value: value });
     });
+    console.log('list: ', list);
     setListState(list);
-  }, [currentResult]);
+  }, [currentResult, readColumns]);
 
   const show = isReadBoxOpen ? { display: 'block', opacity: 1 } : { display: 'none', opacity: 0 };
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   EyeOutlined,
@@ -9,7 +9,7 @@ import {
   ArrowRightOutlined,
   ArrowLeftOutlined,
 } from '@ant-design/icons';
-import { Dropdown, Table, Button, Input } from 'antd';
+import { Dropdown, Table, Button, Input, Select, Grid, Space } from 'antd';
 import { PageHeader } from '@ant-design/pro-layout';
 
 import { useSelector, useDispatch } from 'react-redux';
@@ -46,6 +46,11 @@ export default function DataTable({ config, extra = [] }) {
   const translate = useLanguage();
   const { moneyFormatter } = useMoney();
   const { dateFormat } = useDate();
+
+  const path = window.location.pathname;
+
+  const [searchValue, setSearchValue] = useState('');
+  const [statusFilter, setStatusFilter] = useState(null);
 
   const items = [
     {
@@ -153,18 +158,51 @@ export default function DataTable({ config, extra = [] }) {
   const dispatch = useDispatch();
 
   const handelDataTableLoad = useCallback((pagination) => {
-    const options = { page: pagination.current || 1, items: pagination.pageSize || 10 };
+    const options = {
+      page: pagination.current || 1,
+      items: pagination.pageSize || 10,
+      ...(path === '/query' ? { sortBy: 'created' } : {}),
+    };
     dispatch(crud.list({ entity, options }));
   }, []);
 
-  const filterTable = (e) => {
-    const value = e.target.value;
-    const options = { q: value, fields: searchConfig?.searchFields || '' };
+  // Function to apply both filters
+  const applyFilters = useCallback(() => {
+    const options = {
+      ...(searchValue && { q: searchValue, fields: searchConfig?.searchFields || '' }),
+      ...(statusFilter && { filter: 'status', equal: statusFilter }),
+    };
     dispatch(crud.list({ entity, options }));
+  }, [searchValue, statusFilter, entity, searchConfig, dispatch]);
+
+  const filterByStatus = (value) => {
+    setStatusFilter(value);
   };
 
-  const dispatcher = () => {
-    dispatch(crud.list({ entity }));
+  const filterTable = (e) => {
+    const value = e.target.value;
+    setSearchValue(value);
+  };
+
+  const dispatcher = (incomingOptions = {}) => {
+    const opts = { ...incomingOptions };
+
+    if (entity === 'query') {
+      opts.page = 1;
+      opts.items = 10;
+      opts.sortBy = 'created';
+    } else {
+      opts.page = 1;
+      opts.items = 10;
+    }
+
+    dispatch(crud.list({ entity, options: opts }));
+  };
+
+  const handleRefresh = () => {
+    setSearchValue('');
+    setStatusFilter(null);
+    dispatcher();
   };
 
   useEffect(() => {
@@ -175,6 +213,19 @@ export default function DataTable({ config, extra = [] }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (searchValue !== '' || statusFilter !== null) {
+      applyFilters();
+    } else {
+      dispatcher();
+    }
+  }, [searchValue, statusFilter, applyFilters]);
+
+  const { useBreakpoint } = Grid;
+
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+
   return (
     <>
       <PageHeader
@@ -182,23 +233,46 @@ export default function DataTable({ config, extra = [] }) {
         backIcon={<ArrowLeftOutlined />}
         title={DATATABLE_TITLE}
         ghost={false}
-        extra={[
-          <Input
-            key={`searchFilterDataTable}`}
-            onChange={filterTable}
-            placeholder={translate('search')}
-            allowClear
-          />,
-          <Button onClick={handelDataTableLoad} key={`${uniqueId()}`} icon={<RedoOutlined />}>
-            {translate('Refresh')}
-          </Button>,
+        extra={
+          <Space
+            direction={isMobile ? 'vertical' : 'horizontal'}
+            size={8}
+            style={{
+              width: isMobile ? '100%' : undefined,
+            }}
+          >
+            <Input
+              key="searchFilter"
+              value={searchValue}
+              onChange={filterTable}
+              placeholder={translate('search')}
+              allowClear
+              onClear={() => setSearchValue('')}
+            />
 
-          <AddNewItem key={`${uniqueId()}`} config={config} />,
-        ]}
-        style={{
-          padding: '20px 0px',
-        }}
-      ></PageHeader>
+            <Select
+              key="statusFilter"
+              placeholder="Filter by Status"
+              allowClear
+              style={{ width: isMobile ? '100%' : 150 }}
+              value={statusFilter}
+              onChange={filterByStatus}
+              options={[
+                { value: 'Open', label: 'Open' },
+                { value: 'InProgress', label: 'In Progress' },
+                { value: 'Closed', label: 'Closed' },
+              ]}
+            />
+
+            <Button onClick={handleRefresh} key={uniqueId()} icon={<RedoOutlined />}>
+              {translate('Refresh')}
+            </Button>
+
+            <AddNewItem key={uniqueId()} config={config} />
+          </Space>
+        }
+        style={{ padding: '20px 0' }}
+      />
 
       <Table
         columns={dataTableColumns}

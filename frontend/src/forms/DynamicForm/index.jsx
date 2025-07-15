@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DatePicker, Input, Form, Select, InputNumber, Switch, Tag } from 'antd';
+import { DatePicker, Input, Form, Select, InputNumber, Switch, Tag, Button } from 'antd';
 
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import useLanguage from '@/locale/useLanguage';
@@ -190,6 +190,58 @@ function FormElement({ field, feedback, setFeedback }) {
       </Select>
     </Form.Item>
   );
+    const NotesComponent = () => (
+    <div>
+      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+        {translate(field.label)}
+      </label>
+      <Form.List name={field.name}>
+        {(fields, { add, remove }) => (
+          <>
+            {fields.map((noteField) => (
+              <div key={noteField.key} style={{ display: 'flex', marginBottom: '8px', alignItems: 'flex-start' }}>
+                <Form.Item
+                  {...noteField}
+                  name={[noteField.name, 'content']}
+                  style={{ flex: 1, marginBottom: 0, marginRight: '8px' }}
+                  rules={[{ required: false }]}
+                >
+                  <TextArea
+                    placeholder="Add a note..."
+                    rows={2}
+                    style={{ width: '100%' }}
+                  />
+                </Form.Item>
+                {fields.length > 1 && (
+                  <CloseOutlined
+                    onClick={() => remove(noteField.name)}
+                    style={{ 
+                      cursor: 'pointer', 
+                      color: '#ff4d4f', 
+                      marginTop: '8px',
+                      fontSize: '14px'
+                    }}
+                  />
+                )}
+              </div>
+            ))}
+            <Form.Item>
+              <Button 
+                type="dashed" 
+                onClick={() => add({ content: '' })} 
+                block 
+                icon={<CheckOutlined />}
+                style={{ marginTop: '8px' }}
+              >
+                Add Note
+              </Button>
+            </Form.Item>
+          </>
+        )}
+      </Form.List>
+    </div>
+  );
+  
   const ArrayComponent = () => (
     <Form.Item
       label={translate(field.label)}
@@ -289,6 +341,7 @@ function FormElement({ field, feedback, setFeedback }) {
     color: <ColorComponent />,
 
     tag: <TagComponent />,
+    notes: <NotesComponent />,
     array: <ArrayComponent />,
     country: <CountryComponent />,
     search: <SearchComponent />,

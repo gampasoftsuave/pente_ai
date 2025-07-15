@@ -100,9 +100,32 @@ const request = {
   },
 
   delete: async ({ entity, id }) => {
+    console.log('REGULAR DELETE called with - id: ', id);
+    console.log('REGULAR DELETE called with - entity: ', entity);
+    console.log('Stack trace:', new Error().stack);
     try {
       includeToken();
       const response = await axios.delete(entity + '/delete/' + id);
+      successHandler(response, {
+        notifyOnSuccess: true,
+        notifyOnFailed: true,
+      });
+      return response.data;
+    } catch (error) {
+      return errorHandler(error);
+    }
+  },
+
+  // Custom delete method for direct URLs (doesn't add /delete/)
+  deleteCustom: async ({ entity }) => {
+    console.log('DELETE CUSTOM called with entity:', entity);
+    console.log('Stack trace for deleteCustom:', new Error().stack);
+    try {
+      includeToken();
+      // Instead of using the baseURL, construct the full URL manually
+      const fullUrl = `${API_BASE_URL}${entity}`;
+      console.log('Making DELETE request to full URL:', fullUrl);
+      const response = await axios.delete(fullUrl);
       successHandler(response, {
         notifyOnSuccess: true,
         notifyOnFailed: true,
