@@ -27,7 +27,10 @@ const update = async (req, res) => {
 
   const { credit } = previousInvoice;
 
-  const { items = [], taxRate = 0, discount = 0 } = req.body;
+  // Use validated data instead of raw req.body
+  const { items = [], taxRate = 0, discount = 0 } = value;
+  
+  console.log('Update request - items received:', JSON.stringify(items, null, 2));
 
   if (items.length === 0) {
     return res.status(400).json({
@@ -49,6 +52,12 @@ const update = async (req, res) => {
     subTotal = calculate.add(subTotal, total);
     //item total
     item['total'] = total;
+    // Log to check if notes are preserved
+    if (item.notes) {
+      console.log(`Item "${item.itemName}" has notes: "${item.notes}"`);
+    } else {
+      console.log(`Item "${item.itemName}" has NO notes`);
+    }
   });
   taxTotal = calculate.multiply(subTotal, taxRate / 100);
   total = calculate.add(subTotal, taxTotal);
@@ -58,6 +67,9 @@ const update = async (req, res) => {
   body['total'] = total;
   body['items'] = items;
   body['pdf'] = 'invoice-' + req.params.id + '.pdf';
+  
+  console.log('About to save to database - final items:', JSON.stringify(body.items, null, 2));
+  
   if (body.hasOwnProperty('currency')) {
     delete body.currency;
   }

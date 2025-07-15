@@ -92,9 +92,9 @@ export default function UpdateItem({ config, UpdateForm }) {
       if (fieldsValue.items) {
         let newList = [];
         fieldsValue.items.map((item) => {
-          const { quantity, price, itemName, description } = item;
+          const { quantity, price, itemName, description, notes } = item;
           const total = item.quantity * item.price;
-          newList.push({ total, quantity, price, itemName, description });
+          newList.push({ total, quantity, price, itemName, description, notes });
         });
         dataToUpdate.items = newList;
       }
@@ -142,7 +142,7 @@ export default function UpdateItem({ config, UpdateForm }) {
         title={translate('update')}
         ghost={false}
         tags={[
-          <span key="status">{currentErp.status && translate(currentErp.status)}</span>,
+          <span key="status">{currentErp.status && translate(currentErp.status)} &nbsp;</span>,
           currentErp.paymentStatus && (
             <span key="paymentStatus">
               {currentErp.paymentStatus && translate(currentErp.paymentStatus)}
@@ -168,7 +168,7 @@ export default function UpdateItem({ config, UpdateForm }) {
       <Divider dashed />
       <Loading isLoading={isLoading}>
         <Form form={form} layout="vertical" onFinish={onSubmit} onValuesChange={handelValuesChange}>
-          <UpdateForm subTotal={subTotal} current={current} />
+          <UpdateForm subTotal={subTotal} current={current} form={form} />
         </Form>
       </Loading>
     </>

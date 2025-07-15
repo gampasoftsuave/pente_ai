@@ -20,6 +20,18 @@ const routerApp = (entity, controller) => {
     router.route(`/${entity}/mail`).post(catchErrors(controller['mail']));
   }
 
+  if (entity === 'invoice') {
+    router.route(`/${entity}/generateNotesSummary/:id`).post(catchErrors(controller['generateNotesSummary']));
+  }
+
+  if (entity === 'invoice') {
+    router.route(`/${entity}/:id/generateNotesSummary`).post(catchErrors(controller['generateNotesSummary']));
+  }
+
+  if (entity === 'invoice') {
+    router.route(`/${entity}/generateNotesSummary`).post(catchErrors(controller['generateNotesFromRequest']));
+  }
+
   if (entity === 'quote') {
     router.route(`/${entity}/convert/:id`).get(catchErrors(controller['convert']));
   }

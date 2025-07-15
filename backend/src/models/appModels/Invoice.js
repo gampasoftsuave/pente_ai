@@ -62,6 +62,9 @@ const invoiceSchema = new mongoose.Schema({
       description: {
         type: String,
       },
+      notes: {
+        type: String,
+      },
       quantity: {
         type: Number,
         default: 1,
@@ -143,6 +146,9 @@ const invoiceSchema = new mongoose.Schema({
     default: false,
   },
   notes: {
+    type: String,
+  },
+  notesSummary: {
     type: String,
   },
   status: {

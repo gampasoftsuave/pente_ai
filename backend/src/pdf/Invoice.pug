@@ -297,6 +297,7 @@ html
             tr.tableHeader
               th.service #{translate('item')}
               th #{translate('Quantity')}
+              th #{translate('Notes')}
               th #{translate('PRICE')}
               th #{translate('TOTAL')}
           tbody
@@ -304,18 +305,27 @@ html
               tr
                 td.service #{item.itemName}
                   span #{item.description}
+                  //- if item.notes
+                  //-   br
+                  //-   small.notes(style="color: #666; font-style: italic;") Notes: #{item.notes}
                 td.qty #{item.quantity}  
+                td.note #{item.notes}
                 td.unit  #{moneyFormatter({amount:item.price})}
                 td.total #{moneyFormatter({amount:item.total})}
             tr
-              td(colspan='3') #{translate('SUB TOTAL')}
+              td(colspan='4') #{translate('SUB TOTAL')}
               td.total #{moneyFormatter({amount:model.subTotal})}
             tr
-              td(colspan='3') #{translate('TAX')} #{model.taxRate} %
+              td(colspan='4') #{translate('TAX')} #{model.taxRate} %
               td.total #{moneyFormatter({amount:model.taxTotal})}
             tr
-              td.grand.total(colspan='3')  #{translate('TOTAL')} 
+              td.grand.total(colspan='4')  #{translate('TOTAL')} 
               td.grand.total #{moneyFormatter({amount:model.total})}
+        
+        if model.notesSummary
+          .notes-summary(style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff;")
+            h4(style="margin: 0 0 10px 0; color: #007bff;") Item Notes Summary
+            p(style="margin: 0; line-height: 1.5;") #{model.notesSummary}
         
       .col.col-24
           .space     

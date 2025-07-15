@@ -79,6 +79,19 @@ export default function Invoice() {
       title: translate('Payment'),
       dataIndex: 'paymentStatus',
     },
+    {
+      title: translate('Notes'),
+      dataIndex: 'notes',
+      render: (notes) => {
+        if (!notes) return '';
+        // If notes is an array, join and trim
+        let notesText = Array.isArray(notes) ? notes.join(', ') : String(notes);
+        if (notesText.length > 10) {
+          return notesText.slice(0, 10) + '...';
+        }
+        return notesText;
+      },
+    },
   ];
 
   const Labels = {
